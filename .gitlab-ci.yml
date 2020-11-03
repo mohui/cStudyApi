@@ -1,0 +1,64 @@
+image : microsoft/dotnet:latest
+
+# 执行的 job 
+stages:
+  - build
+  - deploy
+
+before_script:
+  #中文乱码问题
+  - chcp 65001
+  - echo 'start building....'
+  # - $env:ASPNETCORE_ENVIRONMENT = "Prodction"
+
+# 编译代码
+build:
+  stage: build
+  # 将会执行的脚本
+  script:
+    - echo "begin compile..."
+    # - dotnet restore
+    - dotnet build
+    - echo "end compile..."
+  #runner 注册时的 tag，这里指会触发的 runner
+  tags:
+    - dotnet
+    - shell
+  except:
+    - tags
+
+# 部署
+deploy:
+  stage: deploy
+  only:
+    - master
+  # 将会执行的脚本
+  script:
+    - echo "release build..."
+    - $env:ASPNETCORE_ENVIRONMENT = "Production"
+    - dotnet publish -c Release -o "$env:APP_NAME\bin\publish"
+    - echo "end build..."
+    # 停止 IIS 对应站点
+    - C:\Windows\System32\inetsrv\appcmd.exe stop site $env:WEB_SITE_NAME
+    # 停止进程池
+    - C:\Windows\System32\inetsrv\appcmd.exe stop apppool /apppool.name:"$env:WEB_SITE_NAME"
+    
+    # 声明一个变量保存当前时间，用作备份数据文件夹名称
+    - $datetime=Get-Date -Format 'yyyy-MM-dd-HH-mm'
+    # 进入编译好的项目目录
+    - cd $env:APP_NAME\bin\
+
+    # 备份原有项目文件，项目名_当前时间
+    - Copy-Item "$env:DEPLOY_PATH\publish" $env:BACKUP_DEPLOY_PATH\publish$datetime -Recurse -Force
+   
+    # 复制文件到 发布目录
+    - Copy-Item "publish" "$env:DEPLOY_PATH" -Recurse -Force
+   
+    # 启动进程池
+    - C:\Windows\System32\inetsrv\appcmd.exe start apppool /apppool.name:"$env:WEB_SITE_NAME"
+    # 启动 IIS 站点
+    - C:\Windows\System32\inetsrv\appcmd.exe start site $env:WEB_SITE_NAME
+  #runner 注册时的 tag，这里指会触发的 runner
+  tags:
+    - dotnet
+    - shell

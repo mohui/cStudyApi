@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyVersion>2020.10.30.6</AssemblyVersion>
+    <FileVersion>2020.10.30.6</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XZMHui.Core\XZMHui.Core.csproj" />
+    <ProjectReference Include="..\XZMHui.Utils\XZMHui.Utils.csproj" />
+  </ItemGroup>
+
+</Project>
